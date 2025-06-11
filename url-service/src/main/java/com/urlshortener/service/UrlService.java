@@ -6,8 +6,10 @@ import com.urlshortener.dto.UrlReq;
 import com.urlshortener.dto.UrlRes;
 import com.urlshortener.exception.InvalidExpirationException;
 import com.urlshortener.exception.InvalidUrlException;
+import com.urlshortener.exception.UrlNotFoundException;
 import com.urlshortener.repository.UrlRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.net.MalformedURLException;
@@ -16,6 +18,7 @@ import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
 import java.util.Base64;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UrlService {
@@ -25,8 +28,9 @@ public class UrlService {
 
     public UrlRes createShortUrl(UrlReq req) {
         //만료기한 기본값 설정
-        if(req.getExpirationDate() == null){
-            req.setExpirationDate(LocalDateTime.now().plusDays(30));
+        if (req.getExpirationDate() == null) {
+            req.setExpirationDate(LocalDateTime.now()
+                                               .plusDays(30));
         }
 
         //요청 유효성 검증
@@ -48,11 +52,12 @@ public class UrlService {
                      .expirationDate(url.getExpirationDate())
                      .build();
     }
+
     private void validate(UrlReq req) {
         try {
             new URL(req.getOriginalUrl());
 
-            if(isExpired(req.getExpirationDate())){
+            if (isExpired(req.getExpirationDate())) {
                 throw new InvalidExpirationException();
             }
 
@@ -61,14 +66,28 @@ public class UrlService {
         }
     }
 
-    private boolean isExpired(LocalDateTime dateTime){
-        return LocalDateTime.now().isAfter(dateTime);
+    private boolean isExpired(LocalDateTime dateTime) {
+        return LocalDateTime.now()
+                            .isAfter(dateTime);
     }
 
-    //id -> shortKey 변환 (base64 인코딩)
+    //id -> shortKey 변환
     private String encodeIdToBase64(long id) {
         ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
         buffer.putLong(id);
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(buffer.array());
+
+        return Base64.getUrlEncoder()
+                     .withoutPadding()
+                     .encodeToString(buffer.array());
+    }
+
+    public String getOriginalUrl(String shortKey) {
+        Url url = urlRepository.findByShortKey(shortKey).orElseThrow(UrlNotFoundException::new);
+
+        if(isExpired(url.getExpirationDate())){
+            throw new UrlNotFoundException();
+        }
+
+        return url.getOriginalUrl();
     }
 }
