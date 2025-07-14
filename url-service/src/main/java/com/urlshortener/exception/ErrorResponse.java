@@ -1,29 +1,28 @@
 package com.urlshortener.exception;
 
-import lombok.AllArgsConstructor;
+
 import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
+@Getter
 public class ErrorResponse {
     private int status;
     private String error;
     private String message;
     private LocalDateTime timestamp;
+    private String path;
 
-    public static ErrorResponse of(HttpStatus status, ErrorCode errorCode) {
+    public static ErrorResponse of(HttpStatus status, ErrorCode code, String path) {
         return ErrorResponse.builder()
                             .status(status.value())
                             .error(status.getReasonPhrase())
-                            .message(errorCode.getMessage())
+                            .message(code.getMessage())
                             .timestamp(LocalDateTime.now())
+                            .path(path)
                             .build();
     }
 }
