@@ -1,13 +1,13 @@
-package com.urlshortener.service;
+package com.urlshortener.url.service;
 
 import com.urlshortener.config.AppProperties;
-import com.urlshortener.domain.Url;
-import com.urlshortener.dto.UrlReq;
-import com.urlshortener.dto.UrlRes;
+import com.urlshortener.url.domain.Url;
+import com.urlshortener.url.dto.UrlReq;
+import com.urlshortener.url.dto.UrlRes;
 import com.urlshortener.exception.InvalidExpirationException;
 import com.urlshortener.exception.InvalidUrlException;
 import com.urlshortener.exception.UrlNotFoundException;
-import com.urlshortener.repository.UrlRepository;
+import com.urlshortener.url.repository.UrlRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

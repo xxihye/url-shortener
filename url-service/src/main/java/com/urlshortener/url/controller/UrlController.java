@@ -1,8 +1,8 @@
-package com.urlshortener.controller;
+package com.urlshortener.url.controller;
 
-import com.urlshortener.dto.UrlReq;
-import com.urlshortener.dto.UrlRes;
-import com.urlshortener.service.UrlService;
+import com.urlshortener.url.dto.UrlReq;
+import com.urlshortener.url.dto.UrlRes;
+import com.urlshortener.url.service.UrlService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

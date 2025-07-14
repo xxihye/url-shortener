@@ -1,4 +1,4 @@
-package com.urlshortener.domain;
+package com.urlshortener.url.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
