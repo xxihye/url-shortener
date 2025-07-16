@@ -9,7 +9,7 @@ public class BaseException extends RuntimeException{
     private final HttpStatus status;
     private final ErrorCode errorCode;
 
-    public BaseException(HttpStatus status, ErrorCode errorCode) {
+    protected BaseException(HttpStatus status, ErrorCode errorCode) {
         super(errorCode.getMessage());
         this.status = status;
         this.errorCode = errorCode;

@@ -1,8 +1,9 @@
 package com.urlshortener.auth.controller;
 
+import com.urlshortener.auth.dto.AuthRes;
 import com.urlshortener.auth.dto.LoginReq;
-import com.urlshortener.auth.dto.LoginRes;
 import com.urlshortener.auth.dto.SignupReq;
+import com.urlshortener.auth.dto.TokenReissueReq;
 import com.urlshortener.auth.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,8 +29,24 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginRes> login(@Valid @RequestBody LoginReq req){
-        LoginRes res = authService.login(req);
+    public ResponseEntity<AuthRes> login(@Valid @RequestBody LoginReq req){
+        AuthRes res = authService.login(req);
         return ResponseEntity.ok(res);
+    }
+
+    @PostMapping("/reissue")
+    public ResponseEntity<AuthRes> reissue(@RequestBody TokenReissueReq req){
+        return ResponseEntity.ok(authService.reissue(req.getRefreshToken()));
+    }
+
+    @PostMapping("/admin/login")
+    public ResponseEntity<AuthRes> adminLogin(@RequestBody LoginReq req) {
+        AuthRes res = authService.adminLogin(req);
+        return ResponseEntity.ok(res);
+    }
+
+    @PostMapping("/admin/reissue")
+    public ResponseEntity<AuthRes> reissueAdminToken(@RequestBody TokenReissueReq req) {
+        return ResponseEntity.ok(authService.reissueAdminToken(req.getRefreshToken()));
     }
 }

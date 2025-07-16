@@ -113,9 +113,8 @@ public class TokenProvider {
     public Authentication getAuthentication(String token) {
         Claims claims = parseClaims(token);
         String userId = claims.getSubject();
-        Collection<? extends GrantedAuthority> authorities =
-            List.of(new SimpleGrantedAuthority(claims.get(AUTHORITIES_KEY)
-                                                     .toString()));
+
+        Collection<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(claims.get(AUTHORITIES_KEY, String.class)));
 
         UserDetails userDetails = new User(userId, "", authorities);
 
