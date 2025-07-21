@@ -24,6 +24,8 @@ public class Url {
 
     private String originalUrl;
 
+    private Long userNo;
+
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime createAt;

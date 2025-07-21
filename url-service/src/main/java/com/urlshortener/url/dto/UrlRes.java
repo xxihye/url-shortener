@@ -9,5 +9,6 @@ import java.time.LocalDateTime;
 @Builder
 public class UrlRes {
     private String shortUrl;
+    private String originalUrl;
     private LocalDateTime expirationDate;
 }
