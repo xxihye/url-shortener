@@ -19,16 +19,14 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String userName) throws UsernameNotFoundException {
 
-        return userRepository.findByUserId(userName)
+        return userRepository.findByUserNo(Long.parseLong(userName))
                              .map(user -> new UserPrincipal(user.getUserNo(),
-                                                             user.getUserId(),
-                                                             user.getPassword(),
-                                                             Role.ROLE_USER))
-                             .orElseGet(() -> adminUserRepository.findByAdminId(userName)
+                                 user.getPassword(),
+                                 Role.ROLE_USER))
+                             .orElseGet(() -> adminUserRepository.findByAdminNo(Long.parseLong(userName))
                                                                  .map(admin -> new UserPrincipal(admin.getAdminNo(),
-                                                                                                 admin.getAdminId(),
-                                                                                                 admin.getPassword(),
-                                                                                                 Role.ROLE_ADMIN))
+                                                                     admin.getPassword(),
+                                                                     Role.ROLE_ADMIN))
                                                                  .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."))
                              );
     }
