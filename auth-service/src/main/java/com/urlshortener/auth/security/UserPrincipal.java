@@ -1,7 +1,9 @@
 package com.urlshortener.auth.security;
 
 import com.urlshortener.auth.enums.Role;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -10,19 +12,13 @@ import java.util.Collection;
 import java.util.List;
 
 @Getter
+@Builder
+@RequiredArgsConstructor
 public class UserPrincipal implements UserDetails {
 
-    private final Long id;
-    private final String loginId;
+    private final Long userNo;
     private final String password;
     private final Role role;
-
-    public UserPrincipal(Long id, String loginId, String password, Role role) {
-        this.id = id;
-        this.loginId = loginId;
-        this.password = password;
-        this.role = role;
-    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -31,7 +27,7 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public String getUsername() {
-        return loginId;
+        return String.valueOf(userNo);
     }
 
     @Override public boolean isAccountNonExpired()     { return true; }

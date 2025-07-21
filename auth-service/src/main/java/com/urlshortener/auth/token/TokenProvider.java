@@ -2,7 +2,12 @@ package com.urlshortener.auth.token;
 
 import com.urlshortener.auth.dto.JwtToken;
 import com.urlshortener.auth.enums.Role;
-import io.jsonwebtoken.*;
+import com.urlshortener.auth.security.UserPrincipal;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,8 +17,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -53,9 +56,9 @@ public class TokenProvider {
         return createToken(adminNo, Role.ROLE_ADMIN);
     }
 
-    private JwtToken createToken(Long accountNo, Role role) {
-        String accessToken = createAccessToken(accountNo, role);
-        String refreshToken = createRefreshToken(accountNo, role);
+    private JwtToken createToken(Long userNo, Role role) {
+        String accessToken = createAccessToken(userNo, role);
+        String refreshToken = createRefreshToken(userNo, role);
 
         return JwtToken.builder()
                        .grantType(GRANT_TYPE)
@@ -65,24 +68,26 @@ public class TokenProvider {
                        .build();
     }
 
-    private String createAccessToken(Long accountNo, Role role) {
+    private String createAccessToken(Long userNo, Role role) {
         return Jwts.builder()
-                   .setSubject(String.valueOf(accountNo))
+                   .setSubject(String.valueOf(userNo))
                    .claim(AUTHORITIES_KEY, role.name())
                    .claim("token_type", "access")
-                   .setId(UUID.randomUUID().toString())
+                   .setId(UUID.randomUUID()
+                              .toString())
                    .setIssuedAt(new Date())
                    .setExpiration(new Date(System.currentTimeMillis() + accessTokenExpirationTime))
                    .signWith(SignatureAlgorithm.HS512, secretKey)
                    .compact();
     }
 
-    private String createRefreshToken(Long accountNo, Role role) {
+    private String createRefreshToken(Long userNo, Role role) {
         return Jwts.builder()
-                   .setSubject(String.valueOf(accountNo))
+                   .setSubject(String.valueOf(userNo))
                    .claim(AUTHORITIES_KEY, role.name())
                    .claim("token_type", "refresh")
-                   .setId(UUID.randomUUID().toString())
+                   .setId(UUID.randomUUID()
+                              .toString())
                    .setIssuedAt(new Date())
                    .setExpiration(new Date(System.currentTimeMillis() + refreshTokenExpirationTime))
                    .signWith(SignatureAlgorithm.HS512, secretKey)
@@ -96,7 +101,6 @@ public class TokenProvider {
         }
         return null;
     }
-
 
     public boolean validateToken(String token) {
         try {
@@ -112,23 +116,22 @@ public class TokenProvider {
 
     public Authentication getAuthentication(String token) {
         Claims claims = parseClaims(token);
-        String userId = claims.getSubject();
+        Long userNo = Long.parseLong(claims.getSubject());
+        String role = claims.get(AUTHORITIES_KEY, String.class);
+        Collection<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(role));
 
-        Collection<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(claims.get(AUTHORITIES_KEY, String.class)));
+        UserPrincipal principal = UserPrincipal.builder()
+                                               .userNo(userNo)
+                                               .password("")
+                                               .role(Role.valueOf(role))
+                                               .build();
 
-        UserDetails userDetails = new User(userId, "", authorities);
-
-        return new UsernamePasswordAuthenticationToken(userDetails, "", authorities);
+        return new UsernamePasswordAuthenticationToken(principal, "", authorities);
     }
 
     public Long getAccountNo(String token) {
         Claims claims = parseClaims(token);
         return Long.valueOf(claims.getSubject());
-    }
-
-    public String getRole(String token) {
-        Claims claims = parseClaims(token);
-        return claims.get(AUTHORITIES_KEY, String.class);
     }
 
     private Claims parseClaims(String token) {
