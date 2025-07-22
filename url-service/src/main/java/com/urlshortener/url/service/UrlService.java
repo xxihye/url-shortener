@@ -101,7 +101,7 @@ public class UrlService {
 
         //만료된 url 제외 처리 후 반환
         return urls.stream()
-                   .filter(url -> isExpired(url.getExpirationDate()))
+                   .filter(url -> !isExpired(url.getExpirationDate()))
                    .map(url -> UrlRes.builder()
                                      .shortUrl(appProperties.getDomain() + url.getShortKey())
                                      .originalUrl(url.getOriginalUrl())

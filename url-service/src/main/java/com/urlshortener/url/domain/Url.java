@@ -28,7 +28,7 @@ public class Url {
 
     @CreatedDate
     @Column(updatable = false)
-    private LocalDateTime createAt;
+    private LocalDateTime createdAt;
 
     private LocalDateTime expirationDate;
 }
