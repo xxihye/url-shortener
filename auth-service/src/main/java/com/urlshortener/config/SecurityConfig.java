@@ -1,7 +1,7 @@
 package com.urlshortener.config;
 
-import com.urlshortener.auth.token.TokenProvider;
-import com.urlshortener.config.security.JwtAuthenticationFilter;
+import com.urlshortener.auth.jwt.TokenProvider;
+import com.urlshortener.auth.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,11 +40,11 @@ public class SecurityConfig {
                    .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                    .authorizeHttpRequests(
                        auth -> auth.requestMatchers(
-                                       "/api/signup",
-                                       "/api/login",
-                                       "/api/reissue",
-                                       "/api/admin/login",
-                                       "/api/admin/reissue").permitAll()
+                                       "/api/auth/signup",
+                                       "/api/auth/login",
+                                       "/api/auth/reissue",
+                                       "/api/auth/admin/login",
+                                       "/api/auth/admin/reissue").permitAll()
                                    .anyRequest()
                                    .authenticated()
                    )

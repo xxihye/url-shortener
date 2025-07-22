@@ -3,8 +3,9 @@ package com.urlshortener.auth.controller;
 import com.urlshortener.auth.dto.AuthRes;
 import com.urlshortener.auth.dto.LoginReq;
 import com.urlshortener.auth.dto.SignupReq;
-import com.urlshortener.auth.dto.TokenReissueReq;
+import com.urlshortener.auth.jwt.JwtHeaderUtil;
 import com.urlshortener.auth.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -35,8 +36,10 @@ public class AuthController {
     }
 
     @PostMapping("/reissue")
-    public ResponseEntity<AuthRes> reissue(@RequestBody TokenReissueReq req){
-        return ResponseEntity.ok(authService.reissue(req.getRefreshToken()));
+    public ResponseEntity<AuthRes> reissue(HttpServletRequest req){
+        String refreshToken = JwtHeaderUtil.extractToken(req);
+
+        return ResponseEntity.ok(authService.reissue(refreshToken));
     }
 
     @PostMapping("/admin/login")
@@ -46,7 +49,8 @@ public class AuthController {
     }
 
     @PostMapping("/admin/reissue")
-    public ResponseEntity<AuthRes> reissueAdminToken(@RequestBody TokenReissueReq req) {
-        return ResponseEntity.ok(authService.reissueAdminToken(req.getRefreshToken()));
+    public ResponseEntity<AuthRes> reissueAdminToken(HttpServletRequest req) {
+        String refreshToken = JwtHeaderUtil.extractToken(req);
+        return ResponseEntity.ok(authService.reissueAdminToken(refreshToken));
     }
 }

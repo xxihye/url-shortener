@@ -1,6 +1,5 @@
-package com.urlshortener.config.security;
+package com.urlshortener.auth.jwt;
 
-import com.urlshortener.auth.token.TokenProvider;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

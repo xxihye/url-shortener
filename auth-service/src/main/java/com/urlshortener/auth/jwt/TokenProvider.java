@@ -1,4 +1,4 @@
-package com.urlshortener.auth.token;
+package com.urlshortener.auth.jwt;
 
 import com.urlshortener.auth.dto.JwtToken;
 import com.urlshortener.auth.enums.Role;
@@ -21,6 +21,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.security.Key;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -29,14 +31,14 @@ import java.util.UUID;
 @Slf4j
 @Component
 public class TokenProvider {
-    @Value("{jwt.secret}")
+    @Value("${jwt.secret}")
     private String secretKeyString;
 
-    @Value("{jwt.access-expiration}")
-    private long accessTokenExpirationTime;
+    @Value("${jwt.access-expiration}")
+    private Long accessTokenExpirationTime;
 
-    @Value("{jwt.refresh-expiration}")
-    private long refreshTokenExpirationTime;
+    @Value("${jwt.refresh-expiration}")
+    private Long refreshTokenExpirationTime;
 
     private Key secretKey;
 
@@ -132,6 +134,15 @@ public class TokenProvider {
     public Long getAccountNo(String token) {
         Claims claims = parseClaims(token);
         return Long.valueOf(claims.getSubject());
+    }
+
+    public LocalDateTime extractRefreshTokenExpiration(String refreshToken) {
+        Claims claims = parseClaims(refreshToken);
+
+        return claims.getExpiration()
+                     .toInstant()
+                     .atZone(ZoneId.of("Asia/Seoul"))
+                     .toLocalDateTime();
     }
 
     private Claims parseClaims(String token) {

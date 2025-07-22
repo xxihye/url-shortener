@@ -6,9 +6,10 @@ import com.urlshortener.auth.dto.AuthRes;
 import com.urlshortener.auth.dto.JwtToken;
 import com.urlshortener.auth.dto.LoginReq;
 import com.urlshortener.auth.dto.SignupReq;
-import com.urlshortener.auth.token.RefreshToken;
-import com.urlshortener.auth.token.RefreshTokenRepository;
-import com.urlshortener.auth.token.TokenProvider;
+import com.urlshortener.auth.enums.Role;
+import com.urlshortener.auth.jwt.RefreshToken;
+import com.urlshortener.auth.jwt.RefreshTokenRepository;
+import com.urlshortener.auth.jwt.TokenProvider;
 import com.urlshortener.exception.AdminNotFoundException;
 import com.urlshortener.exception.DuplicateUserException;
 import com.urlshortener.exception.InvalidPasswordException;
@@ -17,10 +18,14 @@ import com.urlshortener.exception.UserNotFoundException;
 import com.urlshortener.user.entity.User;
 import com.urlshortener.user.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class AuthService {
 
@@ -54,12 +59,23 @@ public class AuthService {
 
         // Access + Refresh Token 생성
         JwtToken token = tokenProvider.createUserToken(user.getUserNo());
+        LocalDateTime expiresIn = tokenProvider.extractRefreshTokenExpiration(token.getRefreshToken());
 
         // Refresh Token DB 저장
-        refreshTokenRepository.findByUserNo(user.getUserNo())
+        refreshTokenRepository.findByUserNoAndUserType(user.getUserNo(), Role.ROLE_USER)
                               .ifPresentOrElse(
-                                  rt -> rt.updateToken(token.getRefreshToken()),
-                                  () -> refreshTokenRepository.save(new RefreshToken(user.getUserId(), token.getRefreshToken()))
+                                  rt -> {
+                                      rt.updateToken(token.getRefreshToken(), expiresIn);
+                                      refreshTokenRepository.save(rt);
+                                  },
+                                  () -> refreshTokenRepository.save(RefreshToken.builder()
+                                                                                .userNo(user.getUserNo())
+                                                                                .userId(user.getUserId())
+                                                                                .userType(Role.ROLE_USER)
+                                                                                .token(token.getRefreshToken())
+                                                                                .issuedAt(LocalDateTime.now())
+                                                                                .expiresAt(expiresIn)
+                                                                                .build())
                               );
 
         // 응답 반환
@@ -77,19 +93,21 @@ public class AuthService {
 
         Long userNo = tokenProvider.getAccountNo(refreshToken);
 
-        User user = userService.findByUserNo(userNo).orElseThrow(UserNotFoundException::new);
-
         //기존 refresh 토큰 조회
-        RefreshToken saved = refreshTokenRepository.findByUserId(user.getUserId())
-                                                   .orElseThrow(InvalidTokenException::new);
+        RefreshToken savedToken = refreshTokenRepository.findByUserNoAndUserType(userNo, Role.ROLE_USER)
+                                                        .orElseThrow(InvalidTokenException::new);
 
-        if (!saved.getToken().equals(refreshToken)) {
+        if (!savedToken.getToken().equals(refreshToken)) {
+            log.warn("Refresh token mismatch for user: {}", savedToken.getUserId());
             throw new InvalidTokenException();
         }
 
-        //토큰 생성 및 업데이트
+        //토큰 업데이트
         JwtToken newToken = tokenProvider.createUserToken(userNo);
-        saved.updateToken(newToken.getRefreshToken());
+        LocalDateTime expiresAt = tokenProvider.extractRefreshTokenExpiration(newToken.getRefreshToken());
+        savedToken.updateToken(newToken.getRefreshToken(), expiresAt);
+
+        refreshTokenRepository.save(savedToken);
 
         return AuthRes.builder()
                       .token(newToken)
@@ -99,7 +117,8 @@ public class AuthService {
     //어드민 로그인
     public AuthRes adminLogin(LoginReq req) {
         //어드민 조회
-        AdminUser admin = adminUserService.findByAdminId(req.getUserId()).orElseThrow(AdminNotFoundException::new);
+        AdminUser admin = adminUserService.findByAdminId(req.getUserId())
+                                          .orElseThrow(AdminNotFoundException::new);
 
         //비밀번호 미일치
         if (!passwordEncoder.matches(req.getPassword(), admin.getPassword())) {
@@ -108,12 +127,23 @@ public class AuthService {
 
         // Access + Refresh Token 생성
         JwtToken token = tokenProvider.createAdminToken(admin.getAdminNo());
+        LocalDateTime expiresAt = tokenProvider.extractRefreshTokenExpiration(token.getRefreshToken());
 
         // Refresh Token DB 저장
-        refreshTokenRepository.findByUserId(admin.getAdminId())
+        refreshTokenRepository.findByUserNoAndUserType(admin.getAdminNo(), Role.ROLE_ADMIN)
                               .ifPresentOrElse(
-                                  rt -> rt.updateToken(token.getRefreshToken()),
-                                  () -> refreshTokenRepository.save(new RefreshToken(admin.getAdminId(), token.getRefreshToken()))
+                                  rt -> {
+                                      rt.updateToken(token.getRefreshToken(), expiresAt);
+                                      refreshTokenRepository.save(rt);
+                                  },
+                                  () -> refreshTokenRepository.save(RefreshToken.builder()
+                                                                                .userNo(admin.getAdminNo())
+                                                                                .userId(admin.getAdminId())
+                                                                                .userType(Role.ROLE_ADMIN)
+                                                                                .token(token.getRefreshToken())
+                                                                                .issuedAt(LocalDateTime.now())
+                                                                                .expiresAt(expiresAt)
+                                                                                .build())
                               );
 
         // 응답 반환
@@ -126,13 +156,14 @@ public class AuthService {
     // 어드민 토큰 재발급
     public AuthRes reissueAdminToken(String refreshToken) {
         //토큰 검증
-        if (!tokenProvider.validateToken(refreshToken)) {
+        if (refreshToken == null || !tokenProvider.validateToken(refreshToken)) {
             throw new InvalidTokenException();
         }
 
         Long adminNo = tokenProvider.getAccountNo(refreshToken);
 
-        AdminUser admin = adminUserService.findByAdminNo(adminNo).orElseThrow(AdminNotFoundException::new);
+        AdminUser admin = adminUserService.findByAdminNo(adminNo)
+                                          .orElseThrow(AdminNotFoundException::new);
 
         //기존 refresh 토큰 조회
         RefreshToken saved = refreshTokenRepository.findByUserId(admin.getAdminId())
@@ -144,7 +175,10 @@ public class AuthService {
 
         //토큰 생성 및 업데이트
         JwtToken newToken = tokenProvider.createAdminToken(adminNo);
-        saved.updateToken(newToken.getRefreshToken());
+        LocalDateTime expiresAt = tokenProvider.extractRefreshTokenExpiration(newToken.getRefreshToken());
+        saved.updateToken(newToken.getRefreshToken(), expiresAt);
+
+        refreshTokenRepository.save(saved);
 
         return AuthRes.builder()
                       .token(newToken)
