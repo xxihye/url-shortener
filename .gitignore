@@ -37,3 +37,9 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+# auth-service 모듈의 설정 파일 제외
+auth-service/src/main/resources/application.yml
+
+# url-service 모듈의 설정 파일 제외
+url-service/src/main/resources/application.yml
