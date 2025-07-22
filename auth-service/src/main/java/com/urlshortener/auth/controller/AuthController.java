@@ -42,6 +42,14 @@ public class AuthController {
         return ResponseEntity.ok(authService.reissue(refreshToken));
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletRequest req){
+        String refreshToken = JwtHeaderUtil.extractToken(req);
+        authService.logout(refreshToken);
+
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping("/admin/login")
     public ResponseEntity<AuthRes> adminLogin(@RequestBody LoginReq req) {
         AuthRes res = authService.adminLogin(req);

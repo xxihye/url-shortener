@@ -114,6 +114,19 @@ public class AuthService {
                       .build();
     }
 
+    //유저 로그아웃
+    public void logout(String refreshToken){
+        //토큰 검증
+        if(!tokenProvider.validateToken(refreshToken)){
+            throw new InvalidTokenException();
+        }
+
+        Long userNo = tokenProvider.getAccountNo(refreshToken);
+
+        //토큰 무효화
+        refreshTokenRepository.deleteByUserNoAndUserType(userNo, Role.ROLE_USER);
+    }
+
     //어드민 로그인
     public AuthRes adminLogin(LoginReq req) {
         //어드민 조회
