@@ -39,15 +39,21 @@ public class SecurityConfig {
         return http.csrf(csrf -> csrf.disable())
                    .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                    .authorizeHttpRequests(
-                       auth -> auth.requestMatchers(
-                                       "/api/auth/signup",
-                                       "/api/auth/logout",
-                                       "/api/auth/login",
-                                       "/api/auth/reissue",
-                                       "/api/auth/admin/login",
-                                       "/api/auth/admin/reissue").permitAll()
-                                   .anyRequest()
-                                   .authenticated()
+                       auth ->
+                           auth.requestMatchers(
+                                   "/v3/api-docs/**",
+                                   "/swagger-ui/**",
+                                   "/docs/**",
+                                   "/auth/health",
+                                   "/api/auth/signup",
+                                   "/api/auth/logout",
+                                   "/api/auth/login",
+                                   "/api/auth/reissue",
+                                   "/api/auth/admin/login",
+                                   "/api/auth/admin/reissue")
+                               .permitAll()
+                               .anyRequest()
+                               .authenticated()
                    )
                    .addFilterBefore(new JwtAuthenticationFilter(tokenProvider), UsernamePasswordAuthenticationFilter.class)
                    .build();
