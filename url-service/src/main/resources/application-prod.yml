@@ -1,0 +1,21 @@
+aws:
+  secretsmanager:
+    region: ap-northeast-2
+
+app:
+  domain: https://www.xxihye.online/
+
+spring:
+  config:
+    import:
+      - aws-secretsmanager:shorturl-db
+      - aws-secretsmanager:shorturl-jwt
+
+  datasource:
+    url: ${jdbc_url}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${username}
+    password: ${password}
+
+jwt:
+  secret: ${secret}
