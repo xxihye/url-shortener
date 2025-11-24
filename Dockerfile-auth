@@ -1,0 +1,18 @@
+# 1. 빌드 단계
+FROM gradle:8.9-jdk22 AS builder
+WORKDIR /app
+
+# 루트 프로젝트 전체 복사
+COPY . .
+
+# auth-service만 빌드
+RUN gradle :auth-service:bootJar --no-daemon
+
+# 2. 런타임 단계
+FROM eclipse-temurin:22-jdk-alpine
+WORKDIR /app
+
+COPY --from=builder /app/auth-service/build/libs/*.jar app.jar
+
+EXPOSE 8080
+ENTRYPOINT ["java","-jar","app.jar"]
