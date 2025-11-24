@@ -1,6 +1,7 @@
 package com.urlshortener.url.controller;
 
 import com.urlshortener.url.service.UrlService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,7 @@ public class UrlRedirectController {
 
     private final UrlService urlService;
 
+    @Operation(description = "단축 url 리다이렉트")
     @GetMapping("/{shortKey}")
     public ResponseEntity<Void> redirectToOriginalUrl(@PathVariable String shortKey) {
         String url = urlService.getOriginalUrl(shortKey);
