@@ -7,9 +7,6 @@ on:
     paths:
       - 'url-service/**'
       - '.github/workflows/deploy-url.yml'
-    paths-ignore:
-      - 'README.md'
-      # - '.github/workflows/deploy-url.yml'
 
 jobs:
   deploy:

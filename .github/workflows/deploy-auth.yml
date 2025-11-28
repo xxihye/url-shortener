@@ -7,9 +7,6 @@ on:
     paths:
       - 'auth-service/**'
       - '.github/workflows/deploy-auth.yml'
-    paths-ignore:
-      - 'README.md'
-      # - '.github/workflows/deploy-auth.yml'
 
 jobs:
   deploy:
@@ -47,5 +44,4 @@ jobs:
         run: |
           aws ecs update-service \
             --cluster ${{ secrets.ECS_CLUSTER }} \
-            --service ${{ secrets.ECS_AUTH_SERVICE }} \
             --force-new-deployment
