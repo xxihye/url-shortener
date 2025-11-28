@@ -22,10 +22,10 @@ public class SecurityConfig {
         return http.csrf(csrf -> csrf.disable())
                    .authorizeHttpRequests(auth -> auth
                        .requestMatchers(
-                           "/{shortKey}",
-                           "/swagger-ui/**",
-                           "/docs/**",
-                           "/v3/api-docs/**",
+                           "/url/{shortKey}",
+                           "/url/swagger-ui/**",
+                           "/url/docs/**",
+                           "/url/v3/api-docs/**",
                            "/url/health")
                        .permitAll()
                        .anyRequest()

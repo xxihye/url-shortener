@@ -1,0 +1,51 @@
+name: auth-deployer
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'auth-service/**'
+      - '.github/workflows/deploy-auth.yml'
+    paths-ignore:
+      - 'README.md'
+      # - '.github/workflows/deploy-auth.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      ECR_REPOSITORY: ${{ secrets.ECR_AUTH_REPOSITORY }}
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build Docker image
+        run: |
+          ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}
+          docker build -f Dockerfile-auth -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+
+      - name: Push Docker image to ECR
+        run: |
+          ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+      - name: Deploy to ECS
+        run: |
+          aws ecs update-service \
+            --cluster ${{ secrets.ECS_CLUSTER }} \
+            --service ${{ secrets.ECS_AUTH_SERVICE }} \
+            --force-new-deployment
