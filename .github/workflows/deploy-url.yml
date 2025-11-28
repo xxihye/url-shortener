@@ -33,7 +33,7 @@ jobs:
       - name: Build Docker image
         run: |
           ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}
-          docker build -f Dockerfile-auth -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+          docker build -f Dockerfile-url -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
 
       - name: Push Docker image to ECR
         run: |
